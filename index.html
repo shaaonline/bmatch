@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Comparison Tool</title>
+    <style>
+        img {
+            max-width: 400px;
+            margin: 10px;
+            border: 1px solid #ccc;
+        }
+        .preview {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Compare Two Images</h1>
+    <form id="compareForm">
+        <label for="image1">Upload First Image:</label>
+        <input type="file" id="image1" name="image1" accept="image/*" required><br><br>
+        <label for="image2">Upload Second Image:</label>
+        <input type="file" id="image2" name="image2" accept="image/*" required><br><br>
+        <button type="submit">Compare</button>
+    </form>
+
+    <div class="preview">
+        <div>
+            <h3>Image 1</h3>
+            <img id="preview1" alt="Preview of Image 1">
+        </div>
+        <div>
+            <h3>Image 2</h3>
+            <img id="preview2" alt="Preview of Image 2">
+        </div>
+    </div>
+
+    <div id="result"></div>
+    <div>
+        <h3>Difference Image</h3>
+        <img id="differenceImage" alt="Difference Image">
+    </div>
+
+    <script>
+        document.getElementById('image1').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById('preview1').src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('image2').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById('preview2').src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('compareForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('image1', document.getElementById('image1').files[0]);
+            formData.append('image2', document.getElementById('image2').files[0]);
+
+            const response = await fetch('/compare', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+            const resultDiv = document.getElementById('result');
+            if (response.ok) {
+                resultDiv.innerHTML = `<p>Similarity Score: ${result.similarity_score}%</p>`;
+                document.getElementById('differenceImage').src = result.difference_image_url;
+            } else {
+                resultDiv.innerHTML = `<p>Error: ${result.error}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
